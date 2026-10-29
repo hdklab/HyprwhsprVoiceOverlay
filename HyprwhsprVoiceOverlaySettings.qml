@@ -17,7 +17,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "A large floating equalizer for the desktop / overview overlay. It fades in only while hyprwhspr is recording. Place and resize it from the desktop-widget controls; enable 'show on overview' in DankMaterialShell to see it over the overview."
+        text: "A large floating equalizer for the desktop / overview overlay. It fades in while there is audio. Pick the audio source below: system output (music, videos, calls), the microphone, both, or hyprwhspr's dictation state. Place and resize it from the desktop-widget controls; enable 'show on overview' in DankMaterialShell to see it over the overview."
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.surfaceVariantText
         wrapMode: Text.WordWrap
@@ -44,9 +44,23 @@ PluginSettings {
     }
 
     SelectionSetting {
+        settingKey: "audioSource"
+        label: "Audio source"
+        description: "What drives the bars. System output follows everything you hear; microphone follows your voice; Auto uses hyprwhspr when its config directory exists, otherwise the system output."
+        options: [
+            {label: "System output", value: "output"},
+            {label: "Microphone", value: "mic"},
+            {label: "Microphone + system output", value: "both"},
+            {label: "hyprwhspr dictation", value: "hyprwhspr"},
+            {label: "Auto", value: "auto"}
+        ]
+        defaultValue: "output"
+    }
+
+    SelectionSetting {
         settingKey: "idleBehavior"
         label: "When not recording"
-        description: "Dim placeholder keeps the widget visible so you can move/resize it without starting hyprwhspr. Hidden makes it a pure overlay that only appears while recording."
+        description: "Dim placeholder keeps the widget visible so you can move/resize it while nothing is playing. Hidden makes it a pure overlay that only appears when there is audio."
         options: [
             {label: "Show dim placeholder", value: "dim"},
             {label: "Hidden (overlay only)", value: "hidden"}
@@ -93,10 +107,10 @@ PluginSettings {
     SliderSetting {
         settingKey: "sensitivity"
         label: "Sensitivity"
-        description: "Gain applied to the mic level. 150–200% suits most mics."
+        description: "Gain applied to the level. 100% suits most music and speech; raise it for quiet sources."
         minimum: 50
         maximum: 500
-        defaultValue: 200
+        defaultValue: 100
         unit: "%"
     }
 

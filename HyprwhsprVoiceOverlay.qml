@@ -13,8 +13,13 @@ DesktopPluginComponent {
 
     // ── Settings (reactive, mirrored from pluginData) ────────────────
     readonly property int barCount: Math.max(6, Math.min(48, pluginData.barCount ?? 24))
-    readonly property real sensitivity: (pluginData.sensitivity ?? 200) / 100
-    readonly property real responseCurve: 0.45
+    // The level helper already reports perceptual (dB-mapped) levels, so the
+    // gain here is only the user's taste knob, not a fix for tiny linear RMS.
+    readonly property real sensitivity: (pluginData.sensitivity ?? 100) / 100
+    readonly property real responseCurve: 0.85
+    // Where the levels come from: hyprwhspr IPC files, the microphone, the
+    // system output monitor, both, or auto (hyprwhspr if installed, else output).
+    readonly property string audioSource: pluginData.audioSource ?? "output"
     readonly property bool showIcon: pluginData.showIcon ?? true
     readonly property bool showBackground: pluginData.showBackground ?? false
     readonly property string colorMode: pluginData.colorMode ?? "primary"
@@ -154,26 +159,14 @@ DesktopPluginComponent {
     // steady state forks no processes at all — v1 spawned cat+sleep ~28×/s.
     // While idle it prints a single "I" on the transition and then stays
     // silent, so the QML side is fully quiescent between recordings.
+    // The helper ships next to this component and prints one "R <level>" line
+    // per ~80 ms while audio is present, plus a single "I" when it stops.
+    readonly property string helperPath: Qt.resolvedUrl("audioLevel.py").toString().replace(/^file:\/\//, "")
+
     Process {
         id: monitor
         running: true
-        command: ["bash", "-c",
-            'D="${XDG_CONFIG_HOME:-$HOME/.config}/hyprwhspr"\n'
-            + 'exec 9<> <(:)\n'
-            + 'snore() { read -t "$1" -u 9 2>/dev/null || :; }\n'
-            + 'prev=""\n'
-            + 'while :; do\n'
-            + '  if [ -e "$D/recording_status" ]; then\n'
-            + '    L=0\n'
-            + '    { IFS= read -r L < "$D/audio_level"; } 2>/dev/null\n'
-            + '    printf "R %s\\n" "${L:-0}"\n'
-            + '    prev=R\n'
-            + '    snore 0.08\n'
-            + '  else\n'
-            + '    if [ "$prev" != I ]; then printf "I\\n"; prev=I; fi\n'
-            + '    snore 0.35\n'
-            + '  fi\n'
-            + 'done\n']
+        command: ["python3", root.helperPath, "--source", root.audioSource]
         stdout: SplitParser {
             onRead: line => root.onMonitorLine(line)
         }
@@ -183,6 +176,19 @@ DesktopPluginComponent {
     Timer {
         id: restartTimer
         interval: 1500
+        onTriggered: monitor.running = true
+    }
+
+    // A running Process keeps the command it was started with, so switching the
+    // audio source has to cycle the child.
+    onAudioSourceChanged: {
+        monitor.running = false
+        sourceRestartTimer.restart()
+    }
+
+    Timer {
+        id: sourceRestartTimer
+        interval: 250
         onTriggered: monitor.running = true
     }
 

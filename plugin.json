@@ -1,17 +1,25 @@
 {
   "id": "hyprwhsprVoiceOverlay",
   "name": "Hyprwhspr Voice Overlay",
-  "description": "On-screen / desktop voice visualizer for hyprwhspr. A large mirrored equalizer that fades in only while hyprwhspr is recording, driven by the live microphone level. Can be shown on the desktop and the overview overlay.",
-  "version": "1.0.0",
+  "description": "On-screen / desktop voice visualizer. A large mirrored equalizer that fades in while there is audio, driven by the system output monitor, the microphone, both, or hyprwhspr's dictation state. Can be shown on the desktop and the overview overlay.",
+  "version": "1.1.0",
   "author": "luciano",
   "license": "MIT",
   "icon": "graphic_eq",
   "type": "desktop",
-  "capabilities": ["desktop-widget"],
+  "capabilities": [
+    "desktop-widget"
+  ],
   "component": "./HyprwhsprVoiceOverlay.qml",
   "settings": "./HyprwhsprVoiceOverlaySettings.qml",
-  "compositors": ["niri", "hyprland"],
-  "requires": ["hyprwhspr"],
+  "compositors": [
+    "niri",
+    "hyprland"
+  ],
   "requires_dms": ">=1.2.0",
-  "permissions": ["settings_read", "settings_write", "process"]
+  "permissions": [
+    "settings_read",
+    "settings_write",
+    "process"
+  ]
 }
